@@ -1,4 +1,4 @@
-appName: nahdi-mw-uat
+appName: nahdi-sso-uat
 replicaCount: 2
 image: nginx:latest
 publicIngress:

@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: dynamic-applicationset
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
+              revision: master
+              files:
+                - path: '*/*-values.yaml'  # Match values files in any subdirectory
+          - clusters:
+              selector:
+                matchLabels:
+                  argocd.argoproj.io/secret-type: cluster
+  template:
+    metadata:
+      name: 'nahdi-{{ .path.filename | replace "-values.yaml" "" }}'  # Dynamic application name
+    spec:
+      destination:
+        namespace: default
+        server: '{{ .cluster.server }}'
+      project: nahdi-sso
+      source:
+        helm:
+          valueFiles:
+            - '{{ .path.path }}'  # Using the matched values.yaml file
+        path: '{{ .path.dir }}'  # Dynamically get the directory name as path
+        repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
+        targetRevision: master
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

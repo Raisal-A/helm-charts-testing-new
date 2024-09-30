@@ -1,3 +1,5 @@
 apiVersion: v2
 name: nahdi-mw
+description: A Helm chart for deploying the Nahdi MW service
 version: 0.1.0
+appVersion: "1.0"
