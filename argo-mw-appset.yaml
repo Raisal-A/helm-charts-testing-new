@@ -19,12 +19,12 @@ spec:
                   argocd.argoproj.io/secret-type: cluster
   template:
     metadata:
-      name: 'nahdi-mw-{{ .path.filename | replace "-values.yaml" "" }}'
+      name: '{{.helm.appName}}'
     spec:
       destination:
         namespace: '{{ .path.filename | replace "-values.yaml" "" }}'  # Dynamically set namespace
         server: 'https://kubernetes.default.svc'  # Static server value
-      project: prod
+      project: production
       source:
         helm:
           valueFiles:

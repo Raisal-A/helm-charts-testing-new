@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: mw-applicationset
+
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  ignoreApplicationDifferences:
+    - jsonPointers:
+        - /spec/syncPolicy
+  #syncPolicy:
+  #   applicationsSync: create-delete
+  generators:
+   - matrix:
+      generators:
+       - git:
+          repoURL: https://github.com/Raisal-A/helm-charts-values.git
+          revision: staging
+          files:
+          - path: '**/*values.yaml'
+       - clusters:
+              selector:
+                matchLabels:
+                  argocd.argoproj.io/secret-type: cluster
+#                  cluster_name: cluster
+  template:
+    metadata:
+      name: '{{.helm.appName}}'
+    spec:
+      project: production
+      sources:
+       - repoURL: 'https://github.com/Raisal-A/helm-charts-values.git'
+         path: chart
+         targetRevision: master
+         helm:
+           valueFiles:
+           - $values/{{.path.path}}/{{.path.filename}}
+       - repoURL: 'https://github.com/Raisal-A/helm-charts-values.git'
+         targetRevision: master
+         ref: values
+      destination:
+        #server: '{{.server}}'
+        name: cluster
+        namespace: app
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
