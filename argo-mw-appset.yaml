@@ -1,9 +1,10 @@
-apiVersion: argoproj.io/v1alpha1  # or v1beta1 if your Argo version supports it
+apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: dynamic-applicationset
+  name: mw-applicationset
   namespace: argocd
 spec:
+  goTemplate: true
   generators:
     - matrix:
         generators:
@@ -11,30 +12,24 @@ spec:
               repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
               revision: master
               files:
-                - path: '**/*-values.yaml'  # Glob pattern for matching files
+                - path: 'nahdi-mw/*-values.yaml'
           - clusters:
               selector:
                 matchLabels:
                   argocd.argoproj.io/secret-type: cluster
-
-template:
-  metadata:
-    annotations:
-      debug.path: '{{ .path }}'
-      debug.pathDir: '{{ .path.dir }}'
-      debug.pathFilename: '{{ .path.filename }}'
-    name: '{{ .path.dir | lower | replace "_" "-" | trimSuffix "-" }}-{{ .path.filename | lower | replace "-values.yaml" "" | replace "_" "-" | trimSuffix "-" }}'
-
+  template:
+    metadata:
+      name: 'nahdi-mw-{{ .path.filename | replace "-values.yaml" "" }}'
     spec:
       destination:
-        namespace: default
-        server: '{{ .cluster.server }}'
-      project: nahdi-sso
+        namespace: '{{ .path.filename | replace "-values.yaml" "" }}'  # Dynamically set namespace
+        server: 'https://kubernetes.default.svc'  # Static server value
+      project: prod
       source:
         helm:
           valueFiles:
-            - '{{ .path.path }}'
-        path: '{{ .path.dir }}'
+            - '{{ .path.path }}'  # Using the matched values.yaml file
+        path: 'nahdi-mw'  # Path to your Helm chart (static in this case)
         repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
         targetRevision: master
       syncPolicy:
