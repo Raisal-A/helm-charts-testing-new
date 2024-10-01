@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: combined-applicationset
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/Raisal-A/helm-charts-values.git
+              revision: master
+              files:
+                - path: 'nahdi-mw/*-values.yaml'
+                - path: 'nahdi-sso/*-values.yaml'
+          - clusters:
+              selector:
+                matchLabels:
+                  argocd.argoproj.io/secret-type: cluster
+  template:
+    metadata:
+      # Correctly accessing the appName from values files
+      name: '{{.helm.appName}}' 
+
+    spec:
+      destination:
+        namespace: '{{ .path.filename | replace "-values.yaml" "" }}'
+        server: '{{ .cluster.server }}'
+      project: production
+      source:
+        helm:
+          valueFiles:
+            - '{{ .path.path }}'  # Reference to the specific values file
+        path: '{{ .path.path | regexReplaceAll "(.*)/.*" "$1" }}'
+        repoURL: https://github.com/Raisal-A/helm-charts-values.git
+        targetRevision: master
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

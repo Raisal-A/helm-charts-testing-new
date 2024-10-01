@@ -9,10 +9,10 @@ spec:
     - matrix:
         generators:
           - git:
-              repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
+              repoURL: https://github.com/Raisal-A/helm-charts-values.git  # New repo for values.yaml
               revision: master
               files:
-                - path: 'nahdi-sso/*-values.yaml'
+                - path: 'nahdi-sso/*-values.yaml'  # Update path to new location
           - clusters:
               selector:
                 matchLabels:
@@ -30,7 +30,7 @@ spec:
           valueFiles:
             - '{{ .path.path }}'  # Using the matched values.yaml file
         path: 'nahdi-sso'  # Path to your Helm chart (static in this case)
-        repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
+        repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git  # Original repo for Helm chart
         targetRevision: master
       syncPolicy:
         automated:

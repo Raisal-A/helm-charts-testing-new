@@ -1,4 +1,4 @@
-appName: "nahdi-mw-uat"
+appName: nahdimwuat
 replicaCount: 2
 image: nginx:latest
 publicIngress:

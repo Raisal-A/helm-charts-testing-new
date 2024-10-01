@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: combined-applicationset
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/Raisal-A/helm-charts-values.git
+              revision: master
+              files:
+                - path: 'nahdi-mw/*-values.yaml'  # Match only the values files in nahdi-mw
+                - path: 'nahdi-sso/*-values.yaml'  # Match only the values files in nahdi-sso
+          - clusters:
+              selector:
+                matchLabels:
+                  argocd.argoproj.io/secret-type: cluster
+  template:
+    metadata:
+      name: '{{ .path.filename | replace "-values.yaml" "" }}'  # Use the filename without the values.yaml suffix
+    spec:
+      destination:
+        namespace: 'default'
+        server: 'https://kubernetes.default.svc'
+      project: prod
+      source:
+        helm:
+          valueFiles:
+            - '{{ .path.path }}'  # Reference the matched values file
+        path: '{{ .path.path | regexReplaceAll "(.*)/.*" "$1" }}'  # Set the path to the chart based on the directory
+        repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
+        targetRevision: master
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
