@@ -1,10 +1,9 @@
-apiVersion: argoproj.io/v1alpha1
+apiVersion: argoproj.io/v1alpha1  # or v1beta1 if your Argo version supports it
 kind: ApplicationSet
 metadata:
   name: dynamic-applicationset
   namespace: argocd
 spec:
-  goTemplate: true
   generators:
     - matrix:
         generators:
@@ -12,14 +11,20 @@ spec:
               repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
               revision: master
               files:
-                - path: '*/*-values.yaml'  # Match values files in any subdirectory
+                - path: '**/*-values.yaml'  # Glob pattern for matching files
           - clusters:
               selector:
                 matchLabels:
                   argocd.argoproj.io/secret-type: cluster
-  template:
-    metadata:
-      name: 'nahdi-{{ .path.filename | replace "-values.yaml" "" }}'  # Dynamic application name
+
+template:
+  metadata:
+    annotations:
+      debug.path: '{{ .path }}'
+      debug.pathDir: '{{ .path.dir }}'
+      debug.pathFilename: '{{ .path.filename }}'
+    name: '{{ .path.dir | lower | replace "_" "-" | trimSuffix "-" }}-{{ .path.filename | lower | replace "-values.yaml" "" | replace "_" "-" | trimSuffix "-" }}'
+
     spec:
       destination:
         namespace: default
@@ -28,8 +33,8 @@ spec:
       source:
         helm:
           valueFiles:
-            - '{{ .path.path }}'  # Using the matched values.yaml file
-        path: '{{ .path.dir }}'  # Dynamically get the directory name as path
+            - '{{ .path.path }}'
+        path: '{{ .path.dir }}'
         repoURL: https://github.com/Raisal-A/helm-charts-testing-new.git
         targetRevision: master
       syncPolicy:
