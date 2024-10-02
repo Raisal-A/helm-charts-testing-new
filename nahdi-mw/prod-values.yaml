@@ -1,4 +1,4 @@
-appName: nahdimwprod
+appName: nahdi-mw-prod
 replicaCount: 3
 image: nginx:stable
 publicIngress:
